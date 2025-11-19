@@ -13,12 +13,11 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/notes") // API의 기본 URL 경로
+@RequestMapping("/notes") // API의 기본 URL 경로
 public class NoteController {
 
     private final NoteService noteService;
 
-    // TODO: (중요!)
     // 아래 모든 메서드의 'currentUserId'는 Spring Security 같은 인증 기능이
     // 구현된 후, @AuthenticationPrincipal 등을 통해 실제 로그인한 사용자의 ID를
     // 동적으로 받아와야 합니다. 지금은 '1'로 임시 고정합니다.
