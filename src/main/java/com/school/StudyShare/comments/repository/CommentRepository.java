@@ -1,6 +1,6 @@
-package com.shcool.StudyShare.comments.repository;
+package com.school.StudyShare.comments.repository;
 
-import com.shcool.StudyShare.comments.entity.Comment;
+import com.school.StudyShare.comments.entity.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

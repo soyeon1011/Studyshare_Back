@@ -1,4 +1,4 @@
-package com.shcool.StudyShare;
+package com.school.StudyShare;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

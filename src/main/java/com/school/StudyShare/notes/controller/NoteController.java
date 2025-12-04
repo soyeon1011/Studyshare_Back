@@ -1,9 +1,9 @@
-package com.shcool.StudyShare.notes.controller;
+package com.school.StudyShare.notes.controller;
 
-import com.shcool.StudyShare.notes.dto.NoteCreateRequestDto;
-import com.shcool.StudyShare.notes.dto.NoteResponseDto;
-import com.shcool.StudyShare.notes.dto.NoteUpdateRequestDto;
-import com.shcool.StudyShare.notes.service.NoteService;
+import com.school.StudyShare.notes.dto.NoteCreateRequestDto;
+import com.school.StudyShare.notes.dto.NoteResponseDto;
+import com.school.StudyShare.notes.dto.NoteUpdateRequestDto;
+import com.school.StudyShare.notes.service.NoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+// 💡 CORS 설정 추가: Flutter 앱(http://localhost:8080)의 접근을 허용합니다.
+@CrossOrigin(origins = "http://localhost:8080")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/notes") // API의 기본 URL 경로
@@ -27,7 +29,7 @@ public class NoteController {
 
     /**
      * 노트 생성
-     * [POST] /api/v1/notes
+     * [POST] /notes
      */
     @PostMapping
     public ResponseEntity<NoteResponseDto> createNote(@RequestBody NoteCreateRequestDto requestDto) {
@@ -38,7 +40,7 @@ public class NoteController {
 
     /**
      * 노트 수정
-     * [PUT] /api/v1/notes/{noteId}
+     * [PUT] /notes/{noteId}
      */
     @PutMapping("/{noteId}")
     public ResponseEntity<NoteResponseDto> updateNote(@PathVariable Long noteId,
@@ -50,7 +52,7 @@ public class NoteController {
 
     /**
      * 노트 삭제
-     * [DELETE] /api/v1/notes/{noteId}
+     * [DELETE] /notes/{noteId}
      */
     @DeleteMapping("/{noteId}")
     public ResponseEntity<Void> deleteNote(@PathVariable Long noteId) {
@@ -61,7 +63,7 @@ public class NoteController {
 
     /**
      * 모든 노트 조회
-     * [GET] /api/v1/notes
+     * [GET] /notes
      */
     @GetMapping
     public ResponseEntity<List<NoteResponseDto>> getAllNotes() {
@@ -71,7 +73,7 @@ public class NoteController {
 
     /**
      * 특정 노트 1개 조회
-     * [GET] /api/v1/notes/{noteId}
+     * [GET] /notes/{noteId}
      */
     @GetMapping("/{noteId}")
     public ResponseEntity<NoteResponseDto> getNoteById(@PathVariable Long noteId) {
@@ -81,7 +83,7 @@ public class NoteController {
 
     /**
      * 특정 사용자(ID)의 모든 노트 조회
-     * [GET] /api/v1/notes/user/{userId}
+     * [GET] /notes/user/{userId}
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<NoteResponseDto>> getNotesByUserId(@PathVariable Integer userId) {

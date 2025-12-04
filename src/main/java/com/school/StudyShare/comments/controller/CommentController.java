@@ -1,8 +1,8 @@
-package com.shcool.StudyShare.comments.controller;
+package com.school.StudyShare.comments.controller;
 
-import com.shcool.StudyShare.comments.dto.CommentRequestDto;
-import com.shcool.StudyShare.comments.dto.CommentResponseDto;
-import com.shcool.StudyShare.comments.service.CommentService;
+import com.school.StudyShare.comments.dto.CommentRequestDto;
+import com.school.StudyShare.comments.dto.CommentResponseDto;
+import com.school.StudyShare.comments.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

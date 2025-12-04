@@ -1,7 +1,7 @@
-package com.shcool.StudyShare.comments.entity;
+package com.school.StudyShare.comments.entity;
 
-import com.shcool.StudyShare.community.entity.Community;
-import com.shcool.StudyShare.notes.entity.Note;
+import com.school.StudyShare.community.entity.Community;
+import com.school.StudyShare.notes.entity.Note;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,10 +1,10 @@
-package com.shcool.StudyShare.notes.service;
+package com.school.StudyShare.notes.service;
 
-import com.shcool.StudyShare.notes.dto.NoteCreateRequestDto;
-import com.shcool.StudyShare.notes.dto.NoteResponseDto;
-import com.shcool.StudyShare.notes.dto.NoteUpdateRequestDto;
-import com.shcool.StudyShare.notes.entity.Note;
-import com.shcool.StudyShare.notes.repository.NoteRepository;
+import com.school.StudyShare.notes.dto.NoteCreateRequestDto;
+import com.school.StudyShare.notes.dto.NoteResponseDto;
+import com.school.StudyShare.notes.dto.NoteUpdateRequestDto;
+import com.school.StudyShare.notes.entity.Note;
+import com.school.StudyShare.notes.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +24,21 @@ public class NoteService {
     @Transactional
     public NoteResponseDto createNote(NoteCreateRequestDto dto, Integer userId) {
         Note note = new Note();
-        note.setUserId(userId); // 1. (중요) 인증된 사용자의 ID를 받아서 설정
-        note.setTitle(dto.getTitle());
+
+        // 💡 [수정 반영] setUserId -> setNoteUserId
+        note.setNoteUserId(userId);
+
+        // 💡 [수정 반영] setTitle -> setNoteTitle
+        note.setNoteTitle(dto.getTitle());
+
         note.setNoteSubjectId(dto.getNoteSubjectId());
         note.setNoteContent(dto.getNoteContent());
         note.setNoteFileUrl(dto.getNoteFileUrl());
-        note.setLikesCount(0);     // 2. 생성 시 좋아요/댓글 수는 0으로 초기화
-        note.setCommentsCount(0);
+
+        // 💡 [수정 반영] setLikesCount -> setNoteLikesCount 등
+        note.setNoteLikesCount(0);
+        note.setNoteCommentsCount(0);
+        note.setNoteCommentsLikesCount(0); // 추가
 
         Note savedNote = noteRepository.save(note);
 
@@ -47,17 +55,19 @@ public class NoteService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 노트를 찾을 수 없습니다. id=" + noteId));
 
         // 2. (보안) 노트 작성자 ID와 현재 로그인한 사용자 ID가 같은지 확인
-        if (!note.getUserId().equals(userId)) {
+        // 💡 [수정 반영] getUserId -> getNoteUserId
+        if (!note.getNoteUserId().equals(userId)) {
             throw new SecurityException("노트를 수정할 권한이 없습니다.");
         }
 
         // 3. DTO의 정보로 엔티티 필드 업데이트
-        note.setTitle(dto.getTitle());
+        // 💡 [수정 반영] setTitle -> setNoteTitle
+        note.setNoteTitle(dto.getTitle());
+
         note.setNoteSubjectId(dto.getNoteSubjectId());
         note.setNoteContent(dto.getNoteContent());
         note.setNoteFileUrl(dto.getNoteFileUrl());
 
-        // 4. noteRepository.save(note)는 noteId가 존재하므로 UPDATE 쿼리를 실행
         Note updatedNote = noteRepository.save(note);
 
         return new NoteResponseDto(updatedNote);
@@ -73,7 +83,8 @@ public class NoteService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 노트를 찾을 수 없습니다. id=" + noteId));
 
         // 2. (보안) 작성자와 로그인 유저가 같은지 확인
-        if (!note.getUserId().equals(userId)) {
+        // 💡 [수정 반영] getUserId -> getNoteUserId
+        if (!note.getNoteUserId().equals(userId)) {
             throw new SecurityException("노트를 삭제할 권한이 없습니다.");
         }
 
@@ -81,18 +92,27 @@ public class NoteService {
         noteRepository.delete(note);
     }
 
+    // =======================================================
+    // 💡 [최신순 정렬 적용] getAllNotes 메서드 수정
+    // =======================================================
+
     /**
-     * 모든 노트 조회
+     * 모든 노트 조회 (최신순)
+     * [GET] /api/v1/notes
      */
     @Transactional(readOnly = true)
     public List<NoteResponseDto> getAllNotes() {
-        return noteRepository.findAll().stream()
+        // 🚨 [핵심 수정] Repository의 최신순 정렬 메서드를 호출합니다.
+        // noteRepository.findAll() 대신 최신순 메서드를 사용합니다.
+        // Entitry 필드명 'noteCreateDate'에 맞춘 Repository 메서드를 호출합니다.
+        return noteRepository.findAllByOrderByNoteCreateDateDesc().stream()
                 .map(NoteResponseDto::new) // Note 객체를 NoteResponseDto로 변환
                 .collect(Collectors.toList());
     }
 
     /**
      * 특정 노트 1개 조회 (ID 기준)
+     * [GET] /api/v1/notes/{noteId}
      */
     @Transactional(readOnly = true)
     public NoteResponseDto getNoteById(Long noteId) {
@@ -107,7 +127,8 @@ public class NoteService {
      */
     @Transactional(readOnly = true)
     public List<NoteResponseDto> getNotesByUserId(Integer userId) {
-        return noteRepository.findByUserId(userId).stream()
+        // 💡 [수정 반영] findByUserId -> findByNoteUserId
+        return noteRepository.findByNoteUserId(userId).stream()
                 .map(NoteResponseDto::new)
                 .collect(Collectors.toList());
     }

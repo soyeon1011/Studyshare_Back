@@ -1,4 +1,4 @@
-package com.shcool.StudyShare.notes.dto;
+package com.school.StudyShare.notes.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

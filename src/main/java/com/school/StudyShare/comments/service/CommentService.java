@@ -1,13 +1,13 @@
-package com.shcool.StudyShare.comments.service;
+package com.school.StudyShare.comments.service;
 
-import com.shcool.StudyShare.comments.dto.CommentRequestDto;
-import com.shcool.StudyShare.comments.dto.CommentResponseDto;
-import com.shcool.StudyShare.comments.entity.Comment;
-import com.shcool.StudyShare.comments.repository.CommentRepository;
-import com.shcool.StudyShare.community.entity.Community;
-import com.shcool.StudyShare.community.repository.CommunityRepository;
-import com.shcool.StudyShare.notes.entity.Note;
-import com.shcool.StudyShare.notes.repository.NoteRepository;
+import com.school.StudyShare.comments.dto.CommentRequestDto;
+import com.school.StudyShare.comments.dto.CommentResponseDto;
+import com.school.StudyShare.comments.entity.Comment;
+import com.school.StudyShare.comments.repository.CommentRepository;
+import com.school.StudyShare.community.entity.Community;
+import com.school.StudyShare.community.repository.CommunityRepository;
+import com.school.StudyShare.notes.entity.Note;
+import com.school.StudyShare.notes.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

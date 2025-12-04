@@ -1,6 +1,6 @@
-package com.shcool.StudyShare.comments.dto;
+package com.school.StudyShare.comments.dto;
 
-import com.shcool.StudyShare.comments.entity.Comment;
+import com.school.StudyShare.comments.entity.Comment;
 import lombok.Getter;
 import java.time.LocalDateTime;
 
