@@ -1,29 +1,25 @@
 package com.school.StudyShare.notes.dto;
 
 import com.school.StudyShare.notes.entity.Note;
-import com.fasterxml.jackson.annotation.JsonProperty; // 💡 [필수] 임포트 확인
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor; // @Builder나 @AllArgsConstructor 사용 시 불필요할 수 있지만, 안정성을 위해 유지
+import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter; // 💡 날짜 포맷팅을 위해 추가
 
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class NoteResponseDto {
 
-    // 💡 [수정] JSON 직렬화 키 명시
     @JsonProperty("id")
     private Long id;
 
-    @JsonProperty("user_id") // Flutter에서 userId를 user_id로 받을 수 있도록 명시
+    @JsonProperty("user_id")
     private Integer userId;
 
-    @JsonProperty("title") // DTO 필드명은 title
+    @JsonProperty("note_title")
     private String title;
 
-    // 💡 [핵심 수정] Flutter가 기대하는 스네이크 케이스 키로 직렬화하도록 명시
     @JsonProperty("note_subject_id")
     private Integer noteSubjectId;
 
@@ -33,20 +29,33 @@ public class NoteResponseDto {
     @JsonProperty("note_file_url")
     private String noteFileUrl;
 
-    @JsonProperty("likes_count") // Flutter의 likesCount와 DTO 필드가 다르다면 명시
+    // 💡 [수정] 프론트엔드 키 이름(snake_case)과 맞춤
+    @JsonProperty("note_likes_count")
     private Integer likesCount;
 
-    @JsonProperty("comments_count")
+    @JsonProperty("note_comments_count")
     private Integer commentsCount;
 
-    @JsonProperty("comments_likes_count")
+    @JsonProperty("note_comments_likes_count")
     private Integer commentsLikesCount;
 
-    @JsonProperty("create_date") // Flutter가 기대하는 키에 맞춤
-    private LocalDateTime createDate;
+    // 🚨 [핵심 수정] LocalDateTime -> String으로 변경!
+    // 이렇게 해야 프론트에서 오류 없이 받습니다.
+    @JsonProperty("note_create_date")
+    private String createDate;
 
-    // Entity를 DTO로 변환하는 생성자 (유지)
-    public NoteResponseDto(Note note) {
+    @JsonProperty("note_bookmarks_count")
+    private Integer bookmarksCount;
+
+    // 💡 좋아요/북마크 상태
+    @JsonProperty("isLiked")
+    private boolean isLiked;
+
+    @JsonProperty("isBookmarked")
+    private boolean isBookmarked;
+
+    // 생성자
+    public NoteResponseDto(Note note, boolean isLiked, boolean isBookmarked) {
         this.id = note.getId();
         this.userId = note.getNoteUserId();
         this.title = note.getNoteTitle();
@@ -56,6 +65,19 @@ public class NoteResponseDto {
         this.likesCount = note.getNoteLikesCount();
         this.commentsCount = note.getNoteCommentsCount();
         this.commentsLikesCount = note.getNoteCommentsLikesCount();
-        this.createDate = note.getNoteCreateDate();
+        this.bookmarksCount = note.getNoteBookmarksCount();
+        if (this.bookmarksCount == null) {
+            this.bookmarksCount = 0;
+        }
+
+        // 🚨 [핵심 로직] 날짜를 "2024-12-04 10:30:00" 형식의 문자열로 변환
+        if (note.getNoteCreateDate() != null) {
+            this.createDate = note.getNoteCreateDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } else {
+            this.createDate = "";
+        }
+
+        this.isLiked = isLiked;
+        this.isBookmarked = isBookmarked;
     }
 }

@@ -1,57 +1,53 @@
-// package com.school.StudyShare.community.dto;
-
 package com.school.StudyShare.community.dto;
 
 import com.school.StudyShare.community.entity.Community;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 public class CommunityResponseDto {
 
-    @JsonProperty("id")
     private Long id;
-
-    @JsonProperty("user_id") // 💡 [수정] DTO 필드명은 userId
     private Integer userId;
-
-    @JsonProperty("title")
     private String title;
-
-    @JsonProperty("category") // 💡 [수정] category 필드
     private String category;
-
-    @JsonProperty("content")
     private String content;
-
-    @JsonProperty("likes_count")
     private Integer likesCount;
-
-    @JsonProperty("comments_count")
-    private Integer commentsCount;
-
-    @JsonProperty("comment_like_count") // 💡 [수정] DTO 필드명은 commentsLikeCount
+    private Integer commentCount;
     private Integer commentLikeCount;
+    private String createDate;
 
-    @JsonProperty("create_date")
-    private LocalDateTime createDate;
+    // 💡 프론트엔드 UI 상태값
+    private boolean isLiked;
+    private boolean isBookmarked;
 
-    // Entity를 DTO로 변환하는 생성자
-    public CommunityResponseDto(Community post) {
-        this.id = post.getId();
-        this.userId = post.getUserId(); // Entity 필드명에 맞게 호출해야 함
-        this.title = post.getTitle();
-        this.category = post.getCategory();
-        this.content = post.getContent();
-        this.likesCount = post.getLikesCount();
-        this.commentsCount = post.getCommentCount();
-        this.commentLikeCount = post.getCommentLikeCount();
-        this.createDate = post.getCreateDate();
+    // 1. 단순 변환용
+    public CommunityResponseDto(Community community) {
+        this(community, false, false);
+    }
+
+    // 2. 상태값 포함 생성자
+    public CommunityResponseDto(Community community, boolean isLiked, boolean isBookmarked) {
+        this.id = community.getId();
+
+        // ⚠️ [확인 필요] Community Entity의 실제 Getter 이름과 일치시켜야 합니다.
+        // 예: community.getUserId() 인지 community.getCommunityUserId() 인지 확인!
+        this.userId = community.getUserId();
+        this.title = community.getTitle();
+        this.category = community.getCategory();
+        this.content = community.getContent();
+        this.likesCount = community.getLikesCount();
+        this.commentCount = community.getCommentCount();
+        this.commentLikeCount = community.getCommentLikeCount();
+
+        if (community.getCreateDate() != null) {
+            this.createDate = community.getCreateDate().toString();
+        } else {
+            this.createDate = "";
+        }
+
+        this.isLiked = isLiked;
+        this.isBookmarked = isBookmarked;
     }
 }

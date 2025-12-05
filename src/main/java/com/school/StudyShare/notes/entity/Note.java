@@ -52,6 +52,10 @@ public class Note {
     @Column(name = "note_comments_likes_count")
     private Integer noteCommentsLikesCount = 0;
 
+    @JsonProperty("note_bookmarks_count")
+    @Column(name = "note_bookmarks_count")
+    private Integer noteBookmarksCount = 0;
+
     // 💡 [수정] DB 저장 시 현재 시각 자동 삽입 (PrePersist 로직 대체)
     @CreationTimestamp
     @JsonProperty("note_create_date")

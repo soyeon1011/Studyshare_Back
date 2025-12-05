@@ -1,10 +1,7 @@
-// StudyShare/src/main/java/com.school.StudyShare/community/controller/CommunityController.java
-
 package com.school.StudyShare.community.controller;
 
-import com.school.StudyShare.community.dto.CommunityCreateRequestDto;
-import com.school.StudyShare.community.dto.CommunityResponseDto;
 import com.school.StudyShare.community.dto.CommunityUpdateRequestDto;
+import com.school.StudyShare.community.dto.CommunityResponseDto;
 import com.school.StudyShare.community.service.CommunityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,80 +10,47 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// 💡 CORS 설정 (Port 8081로 변경되었으므로 모든 출처를 허용하는 것이 안전합니다.)
-@CrossOrigin(origins = "*")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/communities") // 💡 [수정] 엔드포인트를 /communities로 변경합니다.
+@RequestMapping("/communities")
 public class CommunityController {
 
-    private final CommunityService communityService; // 💡 [수정] CommunityService 주입
+    private final CommunityService communityService;
 
+    // 임시 유저 ID (로그인 구현 전까지)
     private Integer getCurrentUserId() {
-        return 1; // 임시 사용자 ID
+        return 1;
     }
 
-    /**
-     * 게시글 생성 (노트 -> 게시글)
-     * [POST] /communities
-     */
+    // 1. 글 작성 [POST]
     @PostMapping
-    public ResponseEntity<CommunityResponseDto> createPost(@RequestBody CommunityCreateRequestDto requestDto) { // 💡 [수정] DTO 및 메서드명 변경
-        Integer userId = getCurrentUserId();
-        CommunityResponseDto responseDto = communityService.createPost(requestDto, userId); // 💡 [수정] Service 메서드명 변경
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+    public ResponseEntity<CommunityResponseDto> createPost(@RequestBody CommunityUpdateRequestDto requestDto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(communityService.createPost(requestDto, getCurrentUserId()));
     }
 
-    /**
-     * 게시글 수정 (노트 -> 게시글)
-     * [PUT] /communities/{postId}
-     */
-    @PutMapping("/{postId}")
-    public ResponseEntity<CommunityResponseDto> updatePost(@PathVariable Long postId, // 💡 [수정] PathVariable 이름 변경
-                                                           @RequestBody CommunityUpdateRequestDto requestDto) { // 💡 [수정] DTO 변경
-        Integer userId = getCurrentUserId();
-        CommunityResponseDto responseDto = communityService.updatePost(postId, requestDto, userId); // 💡 [수정] Service 메서드명 변경
-        return ResponseEntity.ok(responseDto);
-    }
-
-    /**
-     * 게시글 삭제 (노트 -> 게시글)
-     * [DELETE] /communities/{postId}
-     */
-    @DeleteMapping("/{postId}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long postId) { // 💡 [수정] PathVariable 이름 변경
-        Integer userId = getCurrentUserId();
-        communityService.deletePost(postId, userId); // 💡 [수정] Service 메서드명 변경
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * 모든 게시글 조회 (노트 -> 게시글)
-     * [GET] /communities
-     */
+    // 2. 전체 조회 [GET]
     @GetMapping
-    public ResponseEntity<List<CommunityResponseDto>> getAllPosts() { // 💡 [수정] DTO 및 메서드명 변경
-        List<CommunityResponseDto> posts = communityService.getAllPosts(); // 💡 [수정] Service 메서드명 변경
-        return ResponseEntity.ok(posts);
+    public ResponseEntity<List<CommunityResponseDto>> getAllPosts() {
+        return ResponseEntity.ok(communityService.getAllPosts());
     }
 
-    /**
-     * 특정 게시글 1개 조회 (노트 -> 게시글)
-     * [GET] /communities/{postId}
-     */
-    @GetMapping("/{postId}")
-    public ResponseEntity<CommunityResponseDto> getPostById(@PathVariable Long postId) { // 💡 [수정] DTO 및 PathVariable 이름 변경
-        CommunityResponseDto post = communityService.getPostById(postId); // 💡 [수정] Service 메서드명 변경
-        return ResponseEntity.ok(post);
+    // 3. 카테고리별 조회 [GET] /api/v1/communities/category/자유
+    @GetMapping("/category/{categoryName}")
+    public ResponseEntity<List<CommunityResponseDto>> getPostsByCategory(@PathVariable String categoryName) {
+        return ResponseEntity.ok(communityService.getPostsByCategory(categoryName));
     }
 
-    /**
-     * 특정 사용자(ID)의 모든 게시글 조회 (노트 -> 게시글)
-     * [GET] /communities/user/{userId}
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<CommunityResponseDto>> getPostsByUserId(@PathVariable Integer userId) { // 💡 [수정] DTO 및 메서드명 변경
-        List<CommunityResponseDto> posts = communityService.getPostsByUserId(userId); // 💡 [수정] Service 메서드명 변경
-        return ResponseEntity.ok(posts);
+    // 4. 상세 조회 [GET]
+    @GetMapping("/{id}")
+    public ResponseEntity<CommunityResponseDto> getPostById(@PathVariable Long id) {
+        return ResponseEntity.ok(communityService.getPostById(id));
+    }
+
+    // 5. 삭제 [DELETE]
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        communityService.deletePost(id, getCurrentUserId());
+        return ResponseEntity.noContent().build();
     }
 }

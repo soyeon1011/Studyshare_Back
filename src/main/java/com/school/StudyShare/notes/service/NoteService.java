@@ -4,132 +4,166 @@ import com.school.StudyShare.notes.dto.NoteCreateRequestDto;
 import com.school.StudyShare.notes.dto.NoteResponseDto;
 import com.school.StudyShare.notes.dto.NoteUpdateRequestDto;
 import com.school.StudyShare.notes.entity.Note;
+import com.school.StudyShare.notes.entity.NoteBookmark;
+import com.school.StudyShare.notes.entity.NoteLike;
+import com.school.StudyShare.notes.repository.NoteBookmarkRepository;
+import com.school.StudyShare.notes.repository.NoteLikeRepository;
 import com.school.StudyShare.notes.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor // final 필드에 대한 생성자 자동 생성 (의존성 주입)
+@RequiredArgsConstructor
 public class NoteService {
 
     private final NoteRepository noteRepository;
+    private final NoteLikeRepository noteLikeRepository;
+    private final NoteBookmarkRepository noteBookmarkRepository;
 
-    /**
-     * 노트 생성
-     */
     @Transactional
     public NoteResponseDto createNote(NoteCreateRequestDto dto, Integer userId) {
         Note note = new Note();
-
-        // 💡 [수정 반영] setUserId -> setNoteUserId
         note.setNoteUserId(userId);
-
-        // 💡 [수정 반영] setTitle -> setNoteTitle
         note.setNoteTitle(dto.getTitle());
-
         note.setNoteSubjectId(dto.getNoteSubjectId());
         note.setNoteContent(dto.getNoteContent());
         note.setNoteFileUrl(dto.getNoteFileUrl());
-
-        // 💡 [수정 반영] setLikesCount -> setNoteLikesCount 등
         note.setNoteLikesCount(0);
         note.setNoteCommentsCount(0);
-        note.setNoteCommentsLikesCount(0); // 추가
+        note.setNoteCommentsLikesCount(0);
 
         Note savedNote = noteRepository.save(note);
-
-        return new NoteResponseDto(savedNote);
+        return new NoteResponseDto(savedNote, false, false);
     }
 
-    /**
-     * 노트 수정
-     */
     @Transactional
     public NoteResponseDto updateNote(Long noteId, NoteUpdateRequestDto dto, Integer userId) {
-        // 1. 노트를 ID로 조회
         Note note = noteRepository.findById(noteId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 노트를 찾을 수 없습니다. id=" + noteId));
+                .orElseThrow(() -> new IllegalArgumentException("노트 없음 id=" + noteId));
 
-        // 2. (보안) 노트 작성자 ID와 현재 로그인한 사용자 ID가 같은지 확인
-        // 💡 [수정 반영] getUserId -> getNoteUserId
         if (!note.getNoteUserId().equals(userId)) {
-            throw new SecurityException("노트를 수정할 권한이 없습니다.");
+            throw new SecurityException("권한 없음");
         }
 
-        // 3. DTO의 정보로 엔티티 필드 업데이트
-        // 💡 [수정 반영] setTitle -> setNoteTitle
         note.setNoteTitle(dto.getTitle());
-
         note.setNoteSubjectId(dto.getNoteSubjectId());
         note.setNoteContent(dto.getNoteContent());
         note.setNoteFileUrl(dto.getNoteFileUrl());
 
         Note updatedNote = noteRepository.save(note);
+        boolean isLiked = noteLikeRepository.existsByNoteAndUserId(updatedNote, userId);
+        boolean isBookmarked = noteBookmarkRepository.existsByNoteAndUserId(updatedNote, userId);
 
-        return new NoteResponseDto(updatedNote);
+        return new NoteResponseDto(updatedNote, isLiked, isBookmarked);
     }
 
-    /**
-     * 노트 삭제
-     */
     @Transactional
     public void deleteNote(Long noteId, Integer userId) {
-        // 1. 노트 조회
         Note note = noteRepository.findById(noteId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 노트를 찾을 수 없습니다. id=" + noteId));
-
-        // 2. (보안) 작성자와 로그인 유저가 같은지 확인
-        // 💡 [수정 반영] getUserId -> getNoteUserId
+                .orElseThrow(() -> new IllegalArgumentException("노트 없음 id=" + noteId));
         if (!note.getNoteUserId().equals(userId)) {
-            throw new SecurityException("노트를 삭제할 권한이 없습니다.");
+            throw new SecurityException("권한 없음");
         }
-
-        // 3. 삭제
         noteRepository.delete(note);
     }
 
-    // =======================================================
-    // 💡 [최신순 정렬 적용] getAllNotes 메서드 수정
-    // =======================================================
+    // 💡 좋아요 토글
+    @Transactional
+    public void toggleLike(Long noteId, Integer userId) {
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new IllegalArgumentException("노트 없음"));
 
-    /**
-     * 모든 노트 조회 (최신순)
-     * [GET] /api/v1/notes
-     */
+        Optional<NoteLike> likeOptional = noteLikeRepository.findByNoteAndUserId(note, userId);
+
+        if (likeOptional.isPresent()) {
+            noteLikeRepository.delete(likeOptional.get());
+            if (note.getNoteLikesCount() > 0) note.setNoteLikesCount(note.getNoteLikesCount() - 1);
+        } else {
+            noteLikeRepository.save(new NoteLike(note, userId));
+            note.setNoteLikesCount(note.getNoteLikesCount() + 1);
+        }
+    }
+
+    // 💡 북마크 토글 (이 함수를 통째로 덮어쓰세요)
+    @Transactional
+    public void toggleBookmark(Long noteId, Integer userId) {
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new IllegalArgumentException("노트 없음"));
+
+        Optional<NoteBookmark> bookmarkOptional = noteBookmarkRepository.findByNoteAndUserId(note, userId);
+
+        if (bookmarkOptional.isPresent()) {
+            // 1. 북마크 취소
+            noteBookmarkRepository.delete(bookmarkOptional.get());
+
+            // 🚨 [여기가 빠져있었습니다] 숫자가 0보다 클 때만 -1 감소
+            if (note.getNoteBookmarksCount() > 0) {
+                note.setNoteBookmarksCount(note.getNoteBookmarksCount() - 1);
+            }
+        } else {
+            // 2. 북마크 추가
+            noteBookmarkRepository.save(new NoteBookmark(note, userId));
+
+            // 🚨 [여기가 빠져있었습니다] 숫자 +1 증가
+            // (만약 null이면 0으로 치고 1을 더함)
+            if (note.getNoteBookmarksCount() == null) {
+                note.setNoteBookmarksCount(1);
+            } else {
+                note.setNoteBookmarksCount(note.getNoteBookmarksCount() + 1);
+            }
+        }
+    }
+
+    // 💡 모든 노트 조회 (날짜 최신순)
+    @Transactional(readOnly = true)
+    public List<NoteResponseDto> getAllNotes(Integer userId) {
+        return noteRepository.findAllByOrderByNoteCreateDateDesc().stream()
+                .map(note -> {
+                    boolean isLiked = (userId != null) && noteLikeRepository.existsByNoteAndUserId(note, userId);
+                    boolean isBookmarked = (userId != null) && noteBookmarkRepository.existsByNoteAndUserId(note, userId);
+                    return new NoteResponseDto(note, isLiked, isBookmarked);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // 오버로딩 (비로그인)
     @Transactional(readOnly = true)
     public List<NoteResponseDto> getAllNotes() {
-        // 🚨 [핵심 수정] Repository의 최신순 정렬 메서드를 호출합니다.
-        // noteRepository.findAll() 대신 최신순 메서드를 사용합니다.
-        // Entitry 필드명 'noteCreateDate'에 맞춘 Repository 메서드를 호출합니다.
-        return noteRepository.findAllByOrderByNoteCreateDateDesc().stream()
-                .map(NoteResponseDto::new) // Note 객체를 NoteResponseDto로 변환
-                .collect(Collectors.toList());
+        return getAllNotes(null);
     }
 
-    /**
-     * 특정 노트 1개 조회 (ID 기준)
-     * [GET] /api/v1/notes/{noteId}
-     */
+    @Transactional(readOnly = true)
+    public NoteResponseDto getNoteById(Long noteId, Integer userId) {
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new IllegalArgumentException("노트 없음"));
+        boolean isLiked = (userId != null) && noteLikeRepository.existsByNoteAndUserId(note, userId);
+        boolean isBookmarked = (userId != null) && noteBookmarkRepository.existsByNoteAndUserId(note, userId);
+        return new NoteResponseDto(note, isLiked, isBookmarked);
+    }
+
     @Transactional(readOnly = true)
     public NoteResponseDto getNoteById(Long noteId) {
-        Note note = noteRepository.findById(noteId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 노트를 찾을 수 없습니다. id=" + noteId));
-
-        return new NoteResponseDto(note);
+        return getNoteById(noteId, null);
     }
 
-    /**
-     * 특정 사용자가 작성한 모든 노트 조회
-     */
+    @Transactional(readOnly = true)
+    public List<NoteResponseDto> getNotesByUserId(Integer targetUserId, Integer currentUserId) {
+        return noteRepository.findByNoteUserId(targetUserId).stream()
+                .map(note -> {
+                    boolean isLiked = (currentUserId != null) && noteLikeRepository.existsByNoteAndUserId(note, currentUserId);
+                    boolean isBookmarked = (currentUserId != null) && noteBookmarkRepository.existsByNoteAndUserId(note, currentUserId);
+                    return new NoteResponseDto(note, isLiked, isBookmarked);
+                })
+                .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public List<NoteResponseDto> getNotesByUserId(Integer userId) {
-        // 💡 [수정 반영] findByUserId -> findByNoteUserId
-        return noteRepository.findByNoteUserId(userId).stream()
-                .map(NoteResponseDto::new)
-                .collect(Collectors.toList());
+        return getNotesByUserId(userId, null);
     }
 }

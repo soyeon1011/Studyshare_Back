@@ -11,83 +11,73 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// 💡 CORS 설정 추가: Flutter 앱(http://localhost:8080)의 접근을 허용합니다.
-@CrossOrigin(origins = "http://localhost:8080")
+// 💡 [핵심] 모든 주소 허용 (*)
+// @CrossOrigin(origins = "*")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/notes") // API의 기본 URL 경로
+@RequestMapping("/notes")
 public class NoteController {
 
     private final NoteService noteService;
 
-    // 아래 모든 메서드의 'currentUserId'는 Spring Security 같은 인증 기능이
-    // 구현된 후, @AuthenticationPrincipal 등을 통해 실제 로그인한 사용자의 ID를
-    // 동적으로 받아와야 합니다. 지금은 '1'로 임시 고정합니다.
+    // 임시 사용자 ID (추후 JWT 등 적용 시 변경)
     private Integer getCurrentUserId() {
-        return 1; // 임시 사용자 ID
+        return 1;
     }
 
-    /**
-     * 노트 생성
-     * [POST] /notes
-     */
     @PostMapping
     public ResponseEntity<NoteResponseDto> createNote(@RequestBody NoteCreateRequestDto requestDto) {
-        Integer userId = getCurrentUserId(); // (임시)
+        Integer userId = getCurrentUserId();
         NoteResponseDto responseDto = noteService.createNote(requestDto, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
 
-    /**
-     * 노트 수정
-     * [PUT] /notes/{noteId}
-     */
     @PutMapping("/{noteId}")
     public ResponseEntity<NoteResponseDto> updateNote(@PathVariable Long noteId,
                                                       @RequestBody NoteUpdateRequestDto requestDto) {
-        Integer userId = getCurrentUserId(); // (임시)
+        Integer userId = getCurrentUserId();
         NoteResponseDto responseDto = noteService.updateNote(noteId, requestDto, userId);
         return ResponseEntity.ok(responseDto);
     }
 
-    /**
-     * 노트 삭제
-     * [DELETE] /notes/{noteId}
-     */
     @DeleteMapping("/{noteId}")
     public ResponseEntity<Void> deleteNote(@PathVariable Long noteId) {
-        Integer userId = getCurrentUserId(); // (임시)
+        Integer userId = getCurrentUserId();
         noteService.deleteNote(noteId, userId);
-        return ResponseEntity.noContent().build(); // 삭제 성공 시 204 No Content
+        return ResponseEntity.noContent().build();
     }
 
-    /**
-     * 모든 노트 조회
-     * [GET] /notes
-     */
+    // 💡 [필수 추가] 좋아요 & 북마크
+    @PostMapping("/{id}/like")
+    public ResponseEntity<String> toggleLike(@PathVariable Long id, @RequestParam Integer userId) {
+        noteService.toggleLike(id, userId);
+        return ResponseEntity.ok("좋아요 변경 완료");
+    }
+
+    @PostMapping("/{id}/bookmark")
+    public ResponseEntity<String> toggleBookmark(@PathVariable Long id, @RequestParam Integer userId) {
+        noteService.toggleBookmark(id, userId);
+        return ResponseEntity.ok("북마크 변경 완료");
+    }
+
+    // 💡 [수정] 조회 시 userId를 받아서 하트 여부 확인
     @GetMapping
-    public ResponseEntity<List<NoteResponseDto>> getAllNotes() {
-        List<NoteResponseDto> notes = noteService.getAllNotes();
+    public ResponseEntity<List<NoteResponseDto>> getAllNotes(@RequestParam(required = false) Integer userId) {
+        List<NoteResponseDto> notes = noteService.getAllNotes(userId);
         return ResponseEntity.ok(notes);
     }
 
-    /**
-     * 특정 노트 1개 조회
-     * [GET] /notes/{noteId}
-     */
     @GetMapping("/{noteId}")
-    public ResponseEntity<NoteResponseDto> getNoteById(@PathVariable Long noteId) {
-        NoteResponseDto note = noteService.getNoteById(noteId);
+    public ResponseEntity<NoteResponseDto> getNoteById(@PathVariable Long noteId,
+                                                       @RequestParam(required = false) Integer userId) {
+        NoteResponseDto note = noteService.getNoteById(noteId, userId);
         return ResponseEntity.ok(note);
     }
 
-    /**
-     * 특정 사용자(ID)의 모든 노트 조회
-     * [GET] /notes/user/{userId}
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<NoteResponseDto>> getNotesByUserId(@PathVariable Integer userId) {
-        List<NoteResponseDto> notes = noteService.getNotesByUserId(userId);
+    @GetMapping("/user/{targetUserId}")
+    public ResponseEntity<List<NoteResponseDto>> getNotesByUserId(@PathVariable Integer targetUserId,
+                                                                  @RequestParam(required = false) Integer currentUserId) {
+        List<NoteResponseDto> notes = noteService.getNotesByUserId(targetUserId, currentUserId);
         return ResponseEntity.ok(notes);
     }
 }
