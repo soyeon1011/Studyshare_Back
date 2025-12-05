@@ -16,9 +16,11 @@ public class CommunityBookmark {
     @JoinColumn(name = "community_id")
     private Community community;
 
-    private Long userId;
+    // 💡 [수정] Long -> Integer
+    private Integer userId;
 
-    public CommunityBookmark(Community community, Long userId) {
+    // 💡 [수정] 생성자도 Integer로 변경
+    public CommunityBookmark(Community community, Integer userId) {
         this.community = community;
         this.userId = userId;
     }
