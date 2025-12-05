@@ -38,8 +38,10 @@ public class CommentService {
 
             comment.setNote(note);
 
-            // (옵션) 노트의 댓글 수 증가시키기 (Note 엔티티에 필드가 있다면)
-            // note.setCommentsCount(note.getCommentsCount() + 1);
+            // 💡 [핵심] 댓글 수 증가 + 저장 (이 부분이 없으면 목록에서 0으로 뜸)
+            int currentCount = note.getNoteCommentsCount() == null ? 0 : note.getNoteCommentsCount();
+            note.setNoteCommentsCount(currentCount + 1);
+            noteRepository.save(note); // 👈 필수!
         }
         // 2. 커뮤니티 댓글인 경우
         else if (dto.getCommunityId() != null) {
@@ -48,8 +50,10 @@ public class CommentService {
 
             comment.setCommunity(community);
 
-            // (옵션) 커뮤니티의 댓글 수 증가시키기
-            // community.setCommentCount(community.getCommentCount() + 1);
+            // 💡 [핵심] 댓글 수 증가 + 저장
+            int currentCount = community.getCommentCount() == null ? 0 : community.getCommentCount();
+            community.setCommentCount(currentCount + 1);
+            communityRepository.save(community); // 👈 필수!
         } else {
             throw new IllegalArgumentException("noteId 또는 communityId 중 하나는 필수입니다.");
         }
