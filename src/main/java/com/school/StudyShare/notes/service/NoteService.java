@@ -119,6 +119,38 @@ public class NoteService {
         }
     }
 
+    // 💡 [수정] 내가 북마크한 노트 목록 조회
+    @Transactional(readOnly = true)
+    public List<NoteResponseDto> getBookmarkedNotes(Integer userId) {
+        // 🚨 수정 전: noteBookmarkRepository.findByNoteUserId(userId);
+        // ✅ 수정 후: findByUserId 로 변경!
+        List<NoteBookmark> bookmarks = noteBookmarkRepository.findByUserId(userId);
+
+        return bookmarks.stream()
+                .map(bookmark -> {
+                    Note note = bookmark.getNote();
+                    boolean isLiked = noteLikeRepository.existsByNoteAndUserId(note, userId);
+                    return new NoteResponseDto(note, isLiked, true);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // 💡 [수정] 내가 좋아요한 노트 목록 조회
+    @Transactional(readOnly = true)
+    public List<NoteResponseDto> getLikedNotes(Integer userId) {
+        // 🚨 수정 전: noteLikeRepository.findByNoteUserId(userId);
+        // ✅ 수정 후: findByUserId 로 변경!
+        List<NoteLike> likes = noteLikeRepository.findByUserId(userId);
+
+        return likes.stream()
+                .map(like -> {
+                    Note note = like.getNote();
+                    boolean isBookmarked = noteBookmarkRepository.existsByNoteAndUserId(note, userId);
+                    return new NoteResponseDto(note, true, isBookmarked);
+                })
+                .collect(Collectors.toList());
+    }
+
     // 💡 모든 노트 조회 (날짜 최신순)
     @Transactional(readOnly = true)
     public List<NoteResponseDto> getAllNotes(Integer userId) {

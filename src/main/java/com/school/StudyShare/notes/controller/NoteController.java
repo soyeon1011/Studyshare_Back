@@ -80,4 +80,17 @@ public class NoteController {
         List<NoteResponseDto> notes = noteService.getNotesByUserId(targetUserId, currentUserId);
         return ResponseEntity.ok(notes);
     }
+
+    @GetMapping("/user/{userId}/bookmarks")
+    public ResponseEntity<List<NoteResponseDto>> getBookmarkedNotes(@PathVariable Integer userId) {
+        List<NoteResponseDto> notes = noteService.getBookmarkedNotes(userId);
+        return ResponseEntity.ok(notes);
+    }
+
+    // 💡 [추가] 내가 좋아요한 노트 조회 API
+    @GetMapping("/user/{userId}/likes")
+    public ResponseEntity<List<NoteResponseDto>> getLikedNotes(@PathVariable Integer userId) {
+        List<NoteResponseDto> notes = noteService.getLikedNotes(userId);
+        return ResponseEntity.ok(notes);
+    }
 }
