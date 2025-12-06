@@ -33,7 +33,7 @@ public class CommunityService {
         community.setCategory(dto.getCategory());
         community.setContent(dto.getContent());
         community.setLikesCount(0);
-        community.setBookmarksCount(0); // 💡 초기화
+        community.setBookmarksCount(0);
         community.setCommentCount(0);
         community.setCommentLikeCount(0);
 
@@ -53,7 +53,7 @@ public class CommunityService {
             communityLikeRepository.delete(likeOptional.get());
             if (community.getLikesCount() > 0) community.setLikesCount(community.getLikesCount() - 1);
         } else {
-            communityLikeRepository.save(new CommunityLike(community, userId)); // ⚠️ Entity의 userId 타입도 Integer여야 함
+            communityLikeRepository.save(new CommunityLike(community, userId));
             community.setLikesCount(community.getLikesCount() + 1);
         }
     }
@@ -76,10 +76,22 @@ public class CommunityService {
         }
     }
 
+    // 💡 [필수 추가] 특정 유저가 작성한 게시글 조회
+    @Transactional(readOnly = true)
+    public List<CommunityResponseDto> getPostsByUserId(Integer userId) {
+        return communityRepository.findByUserId(userId).stream() // Repository에 findByUserId 있어야 함
+                .map(post -> {
+                    boolean isLiked = communityLikeRepository.existsByCommunityAndUserId(post, userId);
+                    boolean isBookmarked = communityBookmarkRepository.existsByCommunityAndUserId(post, userId);
+                    return new CommunityResponseDto(post, isLiked, isBookmarked);
+                })
+                .collect(Collectors.toList());
+    }
+
     // 💡 전체 조회 (로그인한 유저 기준 좋아요 여부 포함)
     @Transactional(readOnly = true)
     public List<CommunityResponseDto> getAllPosts(Integer userId) {
-        return communityRepository.findAll().stream()
+        return communityRepository.findAllByOrderByCreateDateDesc().stream()
                 .map(post -> {
                     boolean isLiked = (userId != null) && communityLikeRepository.existsByCommunityAndUserId(post, userId);
                     boolean isBookmarked = (userId != null) && communityBookmarkRepository.existsByCommunityAndUserId(post, userId);

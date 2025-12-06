@@ -17,7 +17,7 @@ public class CommunityController {
 
     private final CommunityService communityService;
 
-    // 💡 좋아요 & 북마크 (노트와 동일 방식)
+    // 💡 좋아요 & 북마크
     @PostMapping("/{id}/like")
     public ResponseEntity<String> toggleLike(@PathVariable Long id, @RequestParam Integer userId) {
         communityService.toggleLike(id, userId);
@@ -30,41 +30,52 @@ public class CommunityController {
         return ResponseEntity.ok("북마크 변경 완료");
     }
 
-    // 💡 내가 좋아요/북마크한 글 목록
+    // 💡 [필수 추가] 내가 작성한 게시글 목록 조회
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<CommunityResponseDto>> getPostsByUserId(@PathVariable Integer userId) {
+        return ResponseEntity.ok(communityService.getPostsByUserId(userId));
+    }
+
+    // 💡 내가 좋아요한 글 목록
     @GetMapping("/user/{userId}/likes")
     public ResponseEntity<List<CommunityResponseDto>> getLikedPosts(@PathVariable Integer userId) {
         return ResponseEntity.ok(communityService.getLikedPosts(userId));
     }
 
+    // 💡 내가 북마크한 글 목록
     @GetMapping("/user/{userId}/bookmarks")
     public ResponseEntity<List<CommunityResponseDto>> getBookmarkedPosts(@PathVariable Integer userId) {
         return ResponseEntity.ok(communityService.getBookmarkedPosts(userId));
     }
 
-    // 기존 기능들 (userId 파라미터 추가하여 상태 확인)
+    // 게시글 생성
     @PostMapping
     public ResponseEntity<CommunityResponseDto> createPost(@RequestBody CommunityUpdateRequestDto requestDto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(communityService.createPost(requestDto, 1)); // 임시 userId 1
     }
 
+    // 전체 게시글 조회
     @GetMapping
     public ResponseEntity<List<CommunityResponseDto>> getAllPosts(@RequestParam(required = false) Integer userId) {
         return ResponseEntity.ok(communityService.getAllPosts(userId));
     }
 
+    // 카테고리별 조회
     @GetMapping("/category/{categoryName}")
     public ResponseEntity<List<CommunityResponseDto>> getPostsByCategory(@PathVariable String categoryName,
                                                                          @RequestParam(required = false) Integer userId) {
         return ResponseEntity.ok(communityService.getPostsByCategory(categoryName, userId));
     }
 
+    // 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<CommunityResponseDto> getPostById(@PathVariable Long id,
                                                             @RequestParam(required = false) Integer userId) {
         return ResponseEntity.ok(communityService.getPostById(id, userId));
     }
 
+    // 게시글 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
         communityService.deletePost(id, 1); // 임시 userId 1
