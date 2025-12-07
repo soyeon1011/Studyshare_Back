@@ -31,6 +31,13 @@ public class CommentService {
         comment.setContent(dto.getContent());
         comment.setParentCommentId(dto.getParentCommentId());
 
+        // 💡 [추가] 대댓글 저장 로직
+        if (dto.getParentCommentId() != null) {
+            comment.setParentCommentId(dto.getParentCommentId());
+        }
+
+        commentRepository.save(comment);
+
         // 1. 노트 댓글인 경우
         if (dto.getNoteId() != null) {
             Note note = noteRepository.findById(dto.getNoteId())
