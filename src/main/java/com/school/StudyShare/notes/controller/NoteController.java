@@ -93,4 +93,15 @@ public class NoteController {
         List<NoteResponseDto> notes = noteService.getLikedNotes(userId);
         return ResponseEntity.ok(notes);
     }
+
+    // 💡 [추가] 검색 API
+    @GetMapping("/search")
+    public ResponseEntity<List<NoteResponseDto>> searchNotes(@RequestParam String keyword,
+                                                             @RequestParam(required = false) Integer userId) {
+        // 검색어가 없으면 빈 리스트 반환
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        return ResponseEntity.ok(noteService.searchNotes(keyword, userId));
+    }
 }

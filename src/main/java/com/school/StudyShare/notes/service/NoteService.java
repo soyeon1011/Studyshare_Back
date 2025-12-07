@@ -10,6 +10,7 @@ import com.school.StudyShare.notes.repository.NoteBookmarkRepository;
 import com.school.StudyShare.notes.repository.NoteLikeRepository;
 import com.school.StudyShare.notes.repository.NoteRepository;
 import lombok.RequiredArgsConstructor;
+import org.jsoup.Jsoup;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +38,11 @@ public class NoteService {
         note.setNoteCommentsCount(0);
         note.setNoteCommentsLikesCount(0);
 
+        String plainText = Jsoup.parse(dto.getNoteContent()).text();
+        note.setNotePlainText(plainText);
+
+        note.setNoteFileUrl(dto.getNoteFileUrl());
+
         Note savedNote = noteRepository.save(note);
         return new NoteResponseDto(savedNote, false, false);
     }
@@ -55,11 +61,33 @@ public class NoteService {
         note.setNoteContent(dto.getNoteContent());
         note.setNoteFileUrl(dto.getNoteFileUrl());
 
+        // 💡 [추가] 수정할 때도 순수 텍스트 업데이트
+        String plainText = Jsoup.parse(dto.getNoteContent()).text();
+        note.setNotePlainText(plainText);
+
+        note.setNoteFileUrl(dto.getNoteFileUrl());
+
         Note updatedNote = noteRepository.save(note);
+
         boolean isLiked = noteLikeRepository.existsByNoteAndUserId(updatedNote, userId);
         boolean isBookmarked = noteBookmarkRepository.existsByNoteAndUserId(updatedNote, userId);
 
         return new NoteResponseDto(updatedNote, isLiked, isBookmarked);
+    }
+
+    // 💡 [추가] 검색 서비스 메서드 (제목 또는 순수 내용에서 검색)
+    @Transactional(readOnly = true)
+    public List<NoteResponseDto> searchNotes(String keyword, Integer userId) {
+        // Repository에 이 메서드를 만들어야 합니다 (다음 단계 참조)
+        List<Note> notes = noteRepository.findByNoteTitleContainingOrNotePlainTextContainingOrderByNoteCreateDateDesc(keyword, keyword);
+
+        return notes.stream()
+                .map(note -> {
+                    boolean isLiked = (userId != null) && noteLikeRepository.existsByNoteAndUserId(note, userId);
+                    boolean isBookmarked = (userId != null) && noteBookmarkRepository.existsByNoteAndUserId(note, userId);
+                    return new NoteResponseDto(note, isLiked, isBookmarked);
+                })
+                .collect(Collectors.toList());
     }
 
     @Transactional

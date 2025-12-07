@@ -36,6 +36,9 @@ public class Note {
     @Column(name = "note_content", columnDefinition = "LONGTEXT", nullable = false)
     private String noteContent;
 
+    @Column(name = "note_plain_text", columnDefinition = "LONGTEXT")
+    private String notePlainText;
+
     @JsonProperty("note_file_url")
     @Column(name = "note_file_url")
     private String noteFileUrl;

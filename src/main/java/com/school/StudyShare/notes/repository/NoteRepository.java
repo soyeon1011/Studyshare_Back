@@ -19,4 +19,8 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     // [유지] 과목 ID로 모든 노트 찾기
     List<Note> findByNoteSubjectId(Integer noteSubjectId);
+
+    // 💡 [추가] 제목 또는 '순수 텍스트' 내용에서 검색 (최신순 정렬)
+    // 기존에 findByNoteTitleContainingOrNoteContentContaining... 를 썼다면 이걸로 교체하세요!
+    List<Note> findByNoteTitleContainingOrNotePlainTextContainingOrderByNoteCreateDateDesc(String title, String plainText);
 }
