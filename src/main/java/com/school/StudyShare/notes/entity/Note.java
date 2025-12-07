@@ -33,7 +33,7 @@ public class Note {
     private Integer noteSubjectId;
 
     @JsonProperty("note_content")
-    @Column(name = "note_content", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "note_content", columnDefinition = "LONGTEXT", nullable = false)
     private String noteContent;
 
     @JsonProperty("note_file_url")
